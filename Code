@@ -1,0 +1,181 @@
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.LinkedList;
+
+public class GTW extends JFrame {
+    private String[][] words = {
+            {"cat", "dog", "bat"},
+            {"java", "swing", "array", "queue"},
+            {"elephant", "giraffe", "kangaroo", "hippopotamus"}
+    };
+    private String currentWord;
+    private LinkedList<Character> guessedLetters;
+    private JLabel wordLabel;
+    private JTextField guessField;
+    private JButton guessButton;
+    private JButton restartButton;
+    private JButton exitButton;
+    private JLabel messageLabel;
+    private JLabel attemptsLabel;
+    private int attempts;
+    private int maxAttempts = 6;
+    private int difficultyLevel = 2;
+
+    public GTW() {
+        setTitle("Guess The Word Game");
+        setSize(600, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        getContentPane().setBackground(new Color(0, 123, 123));
+
+        guessedLetters = new LinkedList<>();
+        currentWord = getRandomWord(difficultyLevel);
+        attempts = 0;
+
+        wordLabel = new JLabel("Guessing Game", SwingConstants.CENTER);
+        wordLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        wordLabel.setForeground(Color.WHITE);
+        wordLabel.setBorder(new EmptyBorder(10, 0, 10, 0));
+
+        guessField = new JTextField(10);
+        guessField.setFont(new Font("Arial", Font.PLAIN, 18));
+        guessField.setHorizontalAlignment(JTextField.CENTER);
+        guessField.setBorder(new EmptyBorder(3, 0, 3, 0));
+
+        guessButton = new JButton("Guess");
+        guessButton.setFont(new Font("Arial", Font.BOLD, 18));
+        guessButton.setBackground(new Color(0, 102, 102));
+        guessButton.setForeground(Color.WHITE);
+        guessButton.setFocusPainted(false);
+        guessButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        restartButton = new JButton("Play Game");
+        restartButton.setFont(new Font("Arial", Font.BOLD, 18));
+        restartButton.setBackground(new Color(0, 102, 102));
+        restartButton.setForeground(Color.WHITE);
+        restartButton.setFocusPainted(false);
+        restartButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        exitButton = new JButton("Exit Game");
+        exitButton.setFont(new Font("Arial", Font.BOLD, 18));
+        exitButton.setBackground(new Color(0, 102, 102));
+        exitButton.setForeground(Color.WHITE);
+        exitButton.setFocusPainted(false);
+        exitButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        messageLabel = new JLabel("Click on Play to start a new game", SwingConstants.CENTER);
+        messageLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+        messageLabel.setForeground(Color.WHITE);
+        messageLabel.setBorder(new EmptyBorder(10, 0, 10, 0));
+
+        attemptsLabel = new JLabel("Attempts left: " + (maxAttempts - attempts), SwingConstants.CENTER);
+        attemptsLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+        attemptsLabel.setForeground(Color.WHITE);
+        attemptsLabel.setBorder(new EmptyBorder(10, 0, 10, 0));
+
+        guessButton.addActionListener(new GuessButtonListener());
+        restartButton.addActionListener(new RestartButtonListener());
+        exitButton.addActionListener(e -> System.exit(0));
+
+        JPanel inputPanel = new JPanel();
+        inputPanel.setBackground(new Color(0, 123, 123));
+        inputPanel.add(guessField);
+        inputPanel.add(guessButton);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(new Color(0, 123, 123));
+        buttonPanel.add(restartButton);
+        buttonPanel.add(exitButton);
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(0, 123, 123));
+        panel.add(wordLabel, BorderLayout.NORTH);
+        panel.add(inputPanel, BorderLayout.CENTER);
+        panel.add(messageLabel, BorderLayout.SOUTH);
+
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(new Color(0, 123, 123));
+        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        mainPanel.add(panel, BorderLayout.CENTER);
+        mainPanel.add(attemptsLabel, BorderLayout.NORTH);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        add(mainPanel);
+    }
+
+    private String getRandomWord(int level) {
+        int index = (int) (Math.random() * words[level].length);
+        return words[level][index];
+    }
+
+    private String getMaskedWord() {
+        StringBuilder maskedWord = new StringBuilder();
+        for (char c : currentWord.toCharArray()) {
+            if (guessedLetters.contains(c)) {
+                maskedWord.append(c);
+            } else {
+                maskedWord.append('_');
+            }
+            maskedWord.append(' ');
+        }
+        return maskedWord.toString();
+    }
+
+    private void guessLetter(char letter) {
+        if (!guessedLetters.contains(letter)) {
+            guessedLetters.add(letter);
+            if (!currentWord.contains(String.valueOf(letter))) {
+                attempts++;
+            }
+        }
+        wordLabel.setText(getMaskedWord());
+        attemptsLabel.setText("Attempts left: " + (maxAttempts - attempts));
+        guessField.setText("");
+
+        if (getMaskedWord().indexOf('_') == -1) {
+            messageLabel.setText("Congratulations! You've guessed the word.");
+            guessButton.setEnabled(false);
+        } else if (attempts >= maxAttempts) {
+            messageLabel.setText("Game Over! The word was: " + currentWord);
+            guessButton.setEnabled(false);
+        } else {
+            messageLabel.setText("Click on Play to start a new game");
+        }
+    }
+
+    private void restartGame() {
+        currentWord = getRandomWord(difficultyLevel);
+        guessedLetters.clear();
+        attempts = 0;
+        wordLabel.setText(getMaskedWord());
+        attemptsLabel.setText("Attempts left: " + (maxAttempts - attempts));
+        guessButton.setEnabled(true);
+        messageLabel.setText("Click on Play to start a new game");
+    }
+
+    private class GuessButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String input = guessField.getText().trim();
+            if (input.length() == 1) {
+                guessLetter(input.charAt(0));
+            } else {
+                messageLabel.setText("Please enter a single letter.");
+            }
+        }
+    }
+
+    private class RestartButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            restartGame();
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new GTW().setVisible(true));
+    }
+}
